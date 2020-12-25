@@ -1,4 +1,4 @@
-#include "uart.h"
+#include "UART.h"
 #include <iostream>
 #include <unistd.h>
 #include <sys/fcntl.h>
@@ -7,7 +7,8 @@
 
 using namespace std;
 
-Uart::Uart() {
+Uart::Uart(const char * Pt) {
+	uart_target = Pt;
 	struct termios  Port_options;   
 
 	tcgetattr(Port, &Port_options);	
@@ -21,20 +22,27 @@ Uart::Uart() {
 
 	if (Port == -1)
 	{
-		printf("∆˜∆Æ ø¿«¬ ∫“∞°¥….");
+		printf("Ìè¨Ìä∏ Ïò§Ìîà Î∂àÍ∞ÄÎä•.");
 	}
 
-	//MD∑Œ∫ø ≈ÎΩ≈ªÁæÁº≠ ¬¸∞Ì : 8 data bits, 1 stop bit, no parity, 57600bps
-	Port_options.c_cflag &= ~CSIZE;
-	Port_options.c_cflag |= CS8;                // 8 data bits
-	Port_options.c_cflag &= ~PARENB;            // Disable Parity
-	Port_options.c_cflag &= ~CSTOPB;            // 1 stop bit
-	Port_options.c_speed = BAUDRATE;            // 57600bps
-
-	int attributes = tcsetattr(Port, TCSANOW, &Port_options);
+	//MDÎ°úÎ¥á ÌÜµÏã†ÏÇ¨ÏñëÏÑú Ï∞∏Í≥† : 8 data bits, 1 stop bit, no parity, 57600bps
+    Port_options.c_cflag &= ~PARENB;            // Disables the Parity Enable bit(PARENB),So No Parity   
+    Port_options.c_cflag &= ~CSTOPB;            // CSTOPB = 2 Stop bits,here it is cleared so 1 Stop bit 
+    Port_options.c_cflag &= ~CSIZE;	            // Clears the mask for setting the data size             
+    Port_options.c_cflag |=  CS8;               // Set the data bits = 8                                 	 
+    Port_options.c_cflag &= ~CRTSCTS;           // No Hardware flow Control                         
+    Port_options.c_cflag |=  CREAD | CLOCAL;                  // Enable receiver,Ignore Modem Control lines       
+    Port_options.c_iflag &= ~(IXON | IXOFF | IXANY);          // Disable XON/XOFF flow control both input & output
+    Port_options.c_iflag &= ~(ICANON | ECHO | ECHOE | ISIG);  // Non Cannonical mode                            
+    Port_options.c_oflag &= ~OPOST;                           // No Output Processing
+    Port_options.c_lflag = 0;               //  enable raw input instead of canonical,
+    Port_options.c_cc[VTIME] = 0;           // Wait indefinetly 
+    cfsetispeed(&Port_options,BAUDRATE);    // Set Read  Speed 
+    cfsetospeed(&Port_options,BAUDRATE);    // Set Write Speed 
+    int attributes = tcsetattr(Port, TCSANOW, &Port_options);
 
 	if (attributes != 0) printf("\nERROR");
-	else printf("\n∆˜∆Æ √ ±‚»≠ øœ∑·.\n");
+	else printf("\nÌè¨Ìä∏ Ï¥àÍ∏∞Ìôî ÏôÑÎ£å.\n");
 
 	tcflush(Port, TCIFLUSH);
 	tcflush(Port, TCIOFLUSH);
