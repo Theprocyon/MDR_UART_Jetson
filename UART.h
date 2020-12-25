@@ -12,7 +12,7 @@ private:
 public:
 	unsigned char rx_data[NSERIAL];
 	Uart(const char *);
-	bool sendUart(unsigned char* msg);
+	bool sendUart(unsigned char msg);
 	void readUart();
 	void closeUart();
 
