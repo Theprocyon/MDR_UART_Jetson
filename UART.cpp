@@ -50,25 +50,11 @@ Uart::Uart(const char * Pt) {
 	usleep(500000);   // 0.5 sec delay
 }
 
-bool Uart::sendUart(unsigned char* msg) {
-
-	unsigned char tx_buffer[BUFFERSIZE];
-	unsigned char* p_tx_buffer;
-
-	p_tx_buffer = &tx_buffer[0];
-
-	for (int i = 0; i < BUFFERSIZE; i++) {
-		*p_tx_buffer++ = msg[i];
-	}
-
+bool Uart::sendUart(unsigned char msg) {
+	
 	if (Port != -1)
 	{
-		int count = write(Port, tx_buffer, (p_tx_buffer - &tx_buffer[0]));
-
-		usleep(1000);   // .001 sec delay
-
-		printf("Num of Packets = %d\n", count);
-
+		int count = write(Port, &msg, 1);
 		if (count < 0)
 		{
 			printf("Failed\n");
