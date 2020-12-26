@@ -9,6 +9,7 @@ using namespace std;
 
 Uart::Uart(const char * Pt) {
 	uart_target = Pt;
+	
 	struct termios  Port_options;   
 
 	tcgetattr(Port, &Port_options);	
@@ -18,31 +19,33 @@ Uart::Uart(const char * Pt) {
 	tcflush(Port, TCIFLUSH);
 	tcflush(Port, TCIOFLUSH);
 
-	usleep(1000000);  // 1 sec delay
+	usleep(500000);  // 1 sec delay
 
 	if (Port == -1)
 	{
-		printf("포트 오픈 불가능.");
+		printf("Unable to open port.");
 	}
 
-	//MD로봇 통신사양서 참고 : 8 data bits, 1 stop bit, no parity, 57600bps
-    Port_options.c_cflag &= ~PARENB;            // Disables the Parity Enable bit(PARENB),So No Parity   
-    Port_options.c_cflag &= ~CSTOPB;            // CSTOPB = 2 Stop bits,here it is cleared so 1 Stop bit 
-    Port_options.c_cflag &= ~CSIZE;	            // Clears the mask for setting the data size             
+	//8 data bits, 1 stop bit, no parity, 57600bps, from MDRobot Communication specification
+	
+    Port_options.c_cflag &= ~PARENB;            // Disables the Parity   
+    Port_options.c_cflag &= ~CSTOPB;            // 1 Stop bit 
+    Port_options.c_cflag &= ~CSIZE;	            
     Port_options.c_cflag |=  CS8;               // Set the data bits = 8                                 	 
     Port_options.c_cflag &= ~CRTSCTS;           // No Hardware flow Control                         
     Port_options.c_cflag |=  CREAD | CLOCAL;                  // Enable receiver,Ignore Modem Control lines       
     Port_options.c_iflag &= ~(IXON | IXOFF | IXANY);          // Disable XON/XOFF flow control both input & output
     Port_options.c_iflag &= ~(ICANON | ECHO | ECHOE | ISIG);  // Non Cannonical mode                            
     Port_options.c_oflag &= ~OPOST;                           // No Output Processing
-    Port_options.c_lflag = 0;               //  enable raw input instead of canonical,
-    Port_options.c_cc[VTIME] = 0;           // Wait indefinetly 
+    Port_options.c_lflag = 0;               //  enable raw input
+    Port_options.c_cc[VTIME] = 0;           // Wait indefinetly
     cfsetispeed(&Port_options,BAUDRATE);    // Set Read  Speed 
     cfsetospeed(&Port_options,BAUDRATE);    // Set Write Speed 
-    int attributes = tcsetattr(Port, TCSANOW, &Port_options);
+	
+    int attributes = tcsetattr(Port, TCSANOW, &Port_options); //Save Attributes
 
 	if (attributes != 0) printf("\nERROR");
-	else printf("\n포트 초기화 완료.\n");
+	else printf("\n Initializing Port Complete : %s\n",Pt);
 
 	tcflush(Port, TCIFLUSH);
 	tcflush(Port, TCIOFLUSH);
@@ -50,22 +53,25 @@ Uart::Uart(const char * Pt) {
 	usleep(500000);   // 0.5 sec delay
 }
 
-bool Uart::sendUart(unsigned char msg) {
-	
-	if (Port != -1)
-	{
-		int count = write(Port, &msg, 1);
-		if (count < 0)
-		{
-			printf("Failed\n");
-			return false;
-		}
-		return true;
-	}
-	else return false;
+bool Uart::sendUart(unsigned char* data, int size) {
+    int wrotelen = 0;
+    int failcnt = 0;
+ 
+    if(!data || size <= 0) return 0;
 
-	usleep(1000);
+    while(wrotelen < size && failcnt < 10)
+    {  
+        int ret = 0;
+        int towritelen = size - wrotelen;
+        unsigned char *ptr = data + wrotelen;
 
+        ret = write(Port,ptr,towritelen*sizeof(unsigned char));
+
+        if (ret > 0) wrotelen += ret;
+        else failcnt++;
+    }
+
+    return wrotelen;
 }
 void Uart::readUart() {
 	unsigned char rx_buffer[BUFFERSIZE];
@@ -80,7 +86,7 @@ void Uart::readUart() {
 		printf("%x ", rx_buffer[i]);
 		this->rx_data[i] = rx_buffer[i];
 	}
-	for (int i = packet_length; i < NSERIAL; i++) this->rx_data[i] = { '\0' };
+	for (int i = packet_length; i < NSERIAL; i++) this->rx_data[i] = { '\0' }; //Fill extra space \0
 }
 
 void Uart::closeUart() {
