@@ -117,7 +117,7 @@ struct POSI_VEL_CMD {
 
 class MD750T {
 private:
-	BYTE DEVICE_ID;
+	BYTE      DEVICE_ID;
 	bool      TxPacket(const PACKET&);
 	PACKET    RxPacket(void);
 	int       RxPacketAnalyzer(BYTE*);
