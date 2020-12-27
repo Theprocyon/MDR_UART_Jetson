@@ -1,14 +1,45 @@
-#ifndef _JETSON_MODBUS
-#define _JETSON_MODBUS
+#ifndef _MD_COMM_UART
+#define _MD_COMM_UART
 #include<vector>
 
 //define constant IDs
-#define MOTOR_CONTROLLER_MACHINE_ID   183
-#define USER_MACHINE_ID               184
-#define BROADCAST_ID                  254
 #define ENABLE                        1  
 #define RETURN_PNT_MAIN_DATA          2   
 #define MAX_PACKET_SIZE               30
+#define MOTOR_CONTROLLER_MACHINE_ID   183
+#define USER_MACHINE_ID               184
+#define BROADCAST_ID                  254
+#define DEFAULT_WRITE_CHK		      0x55
+#define WRITE_CHK		              0xaa
+
+//PIDs
+enum PID {
+	//1byte data
+	VER = 1,
+	DEFAULT_SET = 3,
+	REQ_PID_DATA = 4,
+	COMMAND = 10,
+	STOP_STATUS = 24,
+	IN_POSITION_OK = 49,
+	//2byte data
+	VOLT_IN = 143,
+	IN_POSITION = 171,
+	PNT_TQ_OFF = 174,
+	PNT_BRAKE = 175,
+	MONITOR1 = 196,
+	MONITOR2 = 201,
+
+	//CTRLCODE
+	PNT_POSI_VEL_CMD = 206,
+	PNT_VEL_CMD = 207,
+	PNT_TQ_CMD = 209,
+
+	//Change the value of current position
+	POSI_SET1 = 217,
+	POSI_SET2 = 218,
+
+	MAX_RPM = 221
+};
 
 //Databytes of Command (PID10)
 enum PID10_CMD {
@@ -21,17 +52,13 @@ enum PID10_CMD {
 	CMD_EMER_ON = 67,
 	CMD_EMER_OFF = 68,
 };
-enum PID_STOP_STATUS {
-	STOP_TQ_OFF =     0,
-	STOP_SERVO_LOCK = 1,
-	STOP_BRAKE =      2,
-	STOP_FREE =       3 
-};
 
-//define PIDs
-#define PID_PNT_MAIN_TOTAL_DATA_NUM   24 
-#define PID_MAIN_DATA                 193
-#define PID_PNT_POSI_VEL_CMD          206
+enum PID_STOP_STATUS {
+	STOP_TQ_OFF = 0,
+	STOP_SERVO_LOCK = 1,
+	STOP_BRAKE = 2,
+	STOP_FREE = 3
+};
 
 //define data structure; BYTE WORD
 typedef unsigned char 	   BYTE;
@@ -104,7 +131,7 @@ struct TQ_CMD { //Torque(-1023~1023)
 	IBYTE ID2TQ = Int2Byte(0);
 	BYTE  PID_MONITOR_ID = 0;
 };
-struct POSI_VEL_CMD {
+struct STATE {
 	IBYTE  ID1RPM;
 	IBYTE  ID1AMP;
 	BYTE   ID1STATE;
@@ -115,42 +142,20 @@ struct POSI_VEL_CMD {
 	LBYTE  ID2POS;
 };
 
-class MD750T {
+class MDT {
 private:
 	BYTE      DEVICE_ID;
 	bool      TxPacket(const PACKET&);
 	PACKET    RxPacket(void);
 	int       RxPacketAnalyzer(BYTE*);
-	PACKET    StructPacket(BYTE PID, const DATA&);
+	PACKET    StructPacket(PID pid, const DATA&);
 public:
-	struct POSI_VEL_CMD STATE_DATA;
+	static STATE STATE_DATA;
 
-	MD750T(const char*, BYTE);
-	~MD750T();
-	int PID1_R_VER_();
-	int PID3_C_DEFAULT_SET();
-	int PID4_R_REQ_PID_DATA(BYTE PID);
-	int PID10_C_SEND_COMMAND(PID10_CMD);
-	int PID24_RW_STOP_STATUS(PID_STOP_STATUS);
-	int PID49_R_IN_POSITION_OK();
-	int PID143_R_VOLT_IN();
-	int PID171_RW_IN_POSITION(IBYTE);
-	int PID174_C_PNT_TQ_OFF(BYTE,BYTE,BYTE);
-	int PID175_C_PNT_BRAKE(BYTE, BYTE, BYTE);
-	int PID176_RW_TAR_POSI_VEL(IBYTE);
-	int PID196_MONITOR1();
-	int PID201_MONITOR2();
+	MDT(const char*, BYTE);
+	~MDT();
 
-	//CONTROL CODE
-	int PID206_PNT_POSI_VEL_CMD(POSI_VEL_CMD);
-	int PID207_PNT_VEL_CMD(VEL_CMD);
-	int PID209_PNT_TQ_CMD(TQ_CMD);
-
-	//Change the value of current Position
-	int PID217_POSI_SET1(LBYTE);
-	int PID218_POSI_SET2(LBYTE);
-
-	int PID221_MAX_RPM(IBYTE);
+	bool SendPacket(PID pid, const DATA&);
 };
 
-#endif _JETSON_MODBUS
+#endif _MD_COMM_UART
