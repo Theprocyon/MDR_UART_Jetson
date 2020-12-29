@@ -4,7 +4,8 @@ Static Library for UART intercommunication between Nvidia Jetson Nano (ubuntu, J
 DO NOT USE
 
 IMPORTANT : THIS IS INCOMPLETE PROJECT!
-It's in progress according to schedule; due date : 2020/01/29
+
+This Project is in progress according to schedule; due date : 2020/01/29
 
 WE CANNOT PROMISE NORMAL OPERATION AND THIS CAN MAY HARM YOUR DEVICE.
 
