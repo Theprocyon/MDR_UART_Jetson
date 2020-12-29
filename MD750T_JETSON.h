@@ -1,6 +1,7 @@
 #ifndef _MD_COMM_UART
 #define _MD_COMM_UART
 #include<vector>
+#include<iostream>
 
 //define constant IDs
 #define ENABLE                        1  
@@ -11,9 +12,8 @@
 #define BROADCAST_ID                  254
 #define DEFAULT_WRITE_CHK		      0x55
 #define WRITE_CHK		              0xaa
-
 //PIDs
-enum PID {
+enum class PID {
 	//1byte data
 	VER = 1,
 	DEFAULT_SET = 3,
@@ -42,7 +42,7 @@ enum PID {
 };
 
 //Databytes of Command (PID10)
-enum PID10_CMD {
+enum class PID10_CMD {
 	CMD_TQ_OFF = 2,
 	CMD_BRAKE = 4,
 	MAIN_DATA_BC_ON = 5,
@@ -53,7 +53,7 @@ enum PID10_CMD {
 	CMD_EMER_OFF = 68,
 };
 
-enum PID_STOP_STATUS {
+enum class PID_STOP_STATUS {
 	STOP_TQ_OFF = 0,
 	STOP_SERVO_LOCK = 1,
 	STOP_BRAKE = 2,
@@ -131,6 +131,8 @@ struct TQ_CMD { //Torque(-1023~1023)
 	IBYTE ID2TQ = Int2Byte(0);
 	BYTE  PID_MONITOR_ID = 0;
 };
+
+//define ctrlstruct to data
 struct STATE {
 	IBYTE  ID1RPM;
 	IBYTE  ID1AMP;
@@ -144,18 +146,20 @@ struct STATE {
 
 class MDT {
 private:
-	BYTE      DEVICE_ID;
+	BYTE      DEVICE_ID = BROADCAST_ID;
+	//UART Uart(POS);
 	bool      TxPacket(const PACKET&);
 	PACKET    RxPacket(void);
-	int       RxPacketAnalyzer(BYTE*);
-	PACKET    StructPacket(PID pid, const DATA&);
+	int       RxPacketAnalyzer(PACKET);
+	BYTE      CalcChecksum(const PACKET&);
+	PACKET    StructPacket(BYTE pid, const DATA&);
 public:
 	static STATE STATE_DATA;
 
 	MDT(const char*, BYTE);
 	~MDT();
 
-	bool SendPacket(PID pid, const DATA&);
+	bool Send_Signal(PID pid, const DATA&);
 };
 
 #endif _MD_COMM_UART
