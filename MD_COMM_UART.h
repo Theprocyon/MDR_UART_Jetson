@@ -12,33 +12,40 @@
 #define BROADCAST_ID                  254
 #define DEFAULT_WRITE_CHK		      0x55
 #define WRITE_CHK		              0xaa
+#define DONT_CARE                     0x00
 //PIDs
 enum class PID {
 	//1byte data
-	VER = 1,
+	VER = 1, //R
 	DEFAULT_SET = 3,
 	REQ_PID_DATA = 4,
+	ACK = 7, //R
 	COMMAND = 10,
-	STOP_STATUS = 24,
-	IN_POSITION_OK = 49,
+	ALARM_RESET = 12,
+	POSI_RESET = 13,
+	STOP_STATUS = 24, //RW
+	IN_POSITION_OK = 49,//R
+
 	//2byte data
-	VOLT_IN = 143,
-	IN_POSITION = 171,
+	VOLT_IN = 143, //R
+	RETURN_TYPE = 149, //RW
+	IN_POSITION = 171, //R
 	PNT_TQ_OFF = 174,
 	PNT_BRAKE = 175,
-	MONITOR1 = 196,
-	MONITOR2 = 201,
+	TAR_POSI_VEL = 176,
+	MONITOR1 = 196, //R
+	MONITOR2 = 201, //R
 
 	//CTRLCODE
 	PNT_POSI_VEL_CMD = 206,
 	PNT_VEL_CMD = 207,
 	PNT_TQ_CMD = 209,
-
+	PNT_MAIN_DATA = 210, //R
 	//Change the value of current position
+
 	POSI_SET1 = 217,
 	POSI_SET2 = 218,
-
-	MAX_RPM = 221
+	MAX_RPM = 221 //RW
 };
 
 //Databytes of Command (PID10)
@@ -51,13 +58,6 @@ enum class PID10_CMD {
 	CMD_POSI_RESET = 10,
 	CMD_EMER_ON = 67,
 	CMD_EMER_OFF = 68,
-};
-
-enum class PID_STOP_STATUS {
-	STOP_TQ_OFF = 0,
-	STOP_SERVO_LOCK = 1,
-	STOP_BRAKE = 2,
-	STOP_FREE = 3
 };
 
 //define data structure; BYTE WORD
@@ -79,42 +79,19 @@ typedef struct {
 } LBYTE;
 
 // define BYTE - INT - LONG converter
-int Byte2Int(BYTE byLow, BYTE byHigh)
-{
-	return (byLow | (int)byHigh << 8);
-}
-long Byte2Long(BYTE byData1, BYTE byData2, BYTE byData3, BYTE byData4)
-{
-	return ((long)byData1 | (long)byData2 << 8 | (long)byData3 << 16 |
-		(long)byData4 << 24);
-}
-IBYTE Int2Byte(int nIn)
-{
-	IBYTE Ret;
-
-	Ret.byLow = nIn & 0xff;
-	Ret.byHigh = nIn >> 8 & 0xff;
-	return Ret;
-}
-LBYTE Long2Byte(long lIn)
-{
-	LBYTE Ret;
-
-	Ret.byData1 = lIn & 0xff;
-	Ret.byData2 = lIn >> 8 & 0xff;
-	Ret.byData3 = lIn >> 16 & 0xff;
-	Ret.byData4 = lIn >> 24 & 0xff;
-	return Ret;
-}
+int Byte2Int(BYTE,BYTE);
+long Byte2Long(BYTE,BYTE,BYTE,BYTE);
+IBYTE Int2Byte(int);
+LBYTE Long2Byte(long);
 
 //structure of PID206 data
 struct POSI_VEL_CMD {
 	BYTE  ID1ENABLE = 0;
-	LBYTE ID1POS = Long2Byte(0);
-	IBYTE ID1MAXSPD = Int2Byte(0);
+	long ID1POS = 0;
+	int ID1MAXSPD = 0;
 	BYTE  ID2ENABLE = 0;
-	LBYTE ID2POS = Long2Byte(0);
-	IBYTE ID2MAXSPD = Int2Byte(0);
+	long ID2POS = 0;
+	int ID2MAXSPD = 0;
 	BYTE  PID_MONITOR_ID = 0;
 };
 struct VEL_CMD { //RPM
@@ -153,13 +130,17 @@ private:
 	int       RxPacketAnalyzer(PACKET);
 	BYTE      CalcChecksum(const PACKET&);
 	PACKET    StructPacket(BYTE pid, const DATA&);
+
 public:
 	static STATE STATE_DATA;
 
 	MDT(const char*, BYTE);
 	~MDT();
-
-	bool Send_Signal(PID pid, const DATA&);
+	PACKET Send_Signal(PID pid, const DATA&);
+	PACKET Send_Signal(PID pid, BYTE);
+	PACKET Send_Signal(PID pid, BYTE, BYTE);
+	PACKET Send_Signal(PID pid, PID10_CMD);
+	PACKET Send_Signal(PID pid, POSI_VEL_CMD);
 };
 
 #endif _MD_COMM_UART
