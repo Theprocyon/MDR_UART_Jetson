@@ -7,8 +7,8 @@
 #define ENABLE                        1  
 #define RETURN_PNT_MAIN_DATA          2   
 #define MAX_PACKET_SIZE               30
-#define MOTOR_CONTROLLER_MACHINE_ID   183
-#define USER_MACHINE_ID               184
+#define MOTOR_CONTROLLER_MACHINE_ID   184
+#define USER_MACHINE_ID               172
 #define BROADCAST_ID                  254
 #define DEFAULT_WRITE_CHK		      0x55
 #define WRITE_CHK		              0xaa
@@ -41,6 +41,7 @@ enum class PID {
 	PNT_VEL_CMD = 207,
 	PNT_TQ_CMD = 209,
 	PNT_MAIN_DATA = 210, //R
+	PNT_INC_POSI_CMD = 215,
 	//Change the value of current position
 
 	POSI_SET1 = 217,
@@ -63,6 +64,7 @@ enum class PID10_CMD {
 //define data structure; BYTE WORD
 typedef unsigned char 	   BYTE;
 typedef unsigned int 	   WORD;
+//PACKET and DATA is vector of BYTE
 typedef std::vector<BYTE>  PACKET;
 typedef std::vector<BYTE>  DATA;
 //INT(16bit) for 8bit CPU
@@ -79,68 +81,46 @@ typedef struct {
 } LBYTE;
 
 // define BYTE - INT - LONG converter
-int Byte2Int(BYTE,BYTE);
-long Byte2Long(BYTE,BYTE,BYTE,BYTE);
+int Byte2Int(BYTE, BYTE);
+long Byte2Long(BYTE, BYTE, BYTE, BYTE);
 IBYTE Int2Byte(int);
 LBYTE Long2Byte(long);
 
-//structure of PID206 data
-struct POSI_VEL_CMD {
-	BYTE  ID1ENABLE = 0;
-	long ID1POS = 0;
-	int ID1MAXSPD = 0;
-	BYTE  ID2ENABLE = 0;
-	long ID2POS = 0;
-	int ID2MAXSPD = 0;
-	BYTE  PID_MONITOR_ID = 0;
-};
-struct VEL_CMD { //RPM
-	BYTE  ID1ENABLE = 0;
-	IBYTE ID1SPD = Int2Byte(0);
-	BYTE  ID2ENABLE = 0;
-	IBYTE ID2SPD = Int2Byte(0);
-	BYTE  PID_MONITOR_ID = 0;
-};
-struct TQ_CMD { //Torque(-1023~1023)
-	BYTE  ID1ENABLE = 0;
-	IBYTE ID1TQ = Int2Byte(0);
-	BYTE  ID2ENABLE = 0;
-	IBYTE ID2TQ = Int2Byte(0);
-	BYTE  PID_MONITOR_ID = 0;
-};
-
 //define ctrlstruct to data
 struct STATE {
-	IBYTE  ID1RPM;
-	IBYTE  ID1AMP;
-	BYTE   ID1STATE;
-	LBYTE  ID1POS;
-	IBYTE  ID2RPM;
-	IBYTE  ID2AMP;
-	BYTE   ID2STATE;
-	LBYTE  ID2POS;
+	int  ID1RPM = 0;
+	int  ID1AMP = 0;
+	BYTE   ID1STATE = 0;
+	long  ID1POS = 0;
+
+	int  ID2RPM = 0;
+	int  ID2AMP = 0;
+	BYTE   ID2STATE = 0;
+	long  ID2POS = 0;
 };
 
-class MDT {
+class MD750T {
 private:
 	BYTE      DEVICE_ID = BROADCAST_ID;
+	STATE     DEVICE_STATE = { 0 };
 	//UART Uart(POS);
 	bool      TxPacket(const PACKET&);
-	PACKET    RxPacket(void);
-	int       RxPacketAnalyzer(PACKET);
+	bool      RxPacket(void);
 	BYTE      CalcChecksum(const PACKET&);
 	PACKET    StructPacket(BYTE pid, const DATA&);
 
 public:
-	static STATE STATE_DATA;
 
-	MDT(const char*, BYTE);
-	~MDT();
-	PACKET Send_Signal(PID pid, const DATA&);
-	PACKET Send_Signal(PID pid, BYTE);
-	PACKET Send_Signal(PID pid, BYTE, BYTE);
-	PACKET Send_Signal(PID pid, PID10_CMD);
-	PACKET Send_Signal(PID pid, POSI_VEL_CMD);
+	//lowlevel control
+	MD750T(const char*, BYTE);
+	bool Send_Signal(PID pid, const DATA&);
+	bool Send_Signal(PID pid, BYTE);
+	bool Send_Signal(PID pid, BYTE, BYTE);
+	bool Send_Signal(PID10_CMD);
+	
+	//highlevel control
+	bool MOV_BY_POS(long, long);
+	bool MOV_BY_POS_ABS(long, int, long, int);
 };
 
 #endif _MD_COMM_UART
