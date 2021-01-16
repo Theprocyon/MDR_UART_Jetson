@@ -1,4 +1,4 @@
-﻿#ifndef _UART_H
+#ifndef _UART_H
 #define _UART_H
 #define NSERIAL   256
 #define BAUDRATE       B57600 //50ms
@@ -11,7 +11,7 @@ private:
 public:
 	unsigned char rx_data[NSERIAL];
 	Uart(const char *);
-	bool sendUart(unsigned char*, int size);
+	bool sendUart(const unsigned char*, int size);
 	void readUart();
 	void closeUart();
 
