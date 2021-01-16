@@ -53,7 +53,7 @@ Uart::Uart(const char * Pt) {
 	usleep(500000);   // 0.5 sec delay
 }
 
-bool Uart::sendUart(unsigned char* data, int size) {
+bool Uart::sendUart(const unsigned char* data, int size) {
     int wrotelen = 0;
     int failcnt = 0;
  
@@ -63,7 +63,7 @@ bool Uart::sendUart(unsigned char* data, int size) {
     {  
         int ret = 0;
         int towritelen = size - wrotelen;
-        unsigned char *ptr = data + wrotelen;
+        unsigned char *ptr = const_cast<unsigned char*>(data) + wrotelen;
 
         ret = write(Port,ptr,towritelen*sizeof(unsigned char));
 
