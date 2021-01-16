@@ -1,4 +1,5 @@
 #include "MD_COMM_UART.h"
+
 int Byte2Int(BYTE byLow, BYTE byHigh)
 {
 	return (byLow | (int)byHigh << 8);
@@ -28,28 +29,14 @@ LBYTE Long2Byte(long lIn)
 }
 
 bool MD750T::TxPacket(const PACKET& pct) //incomplete
-{
+{	
+	uart->sendUart(pct.data() ,pct.size());
 	return false;
 }
 
 bool MD750T::RxPacket(void) //incomplete
 {
-	PACKET RawData(24, 0x00);
-
-	if (RawData.size() == 24 || RawData[0] == USER_MACHINE_ID || RawData[1] == MOTOR_CONTROLLER_MACHINE_ID || CalcChecksum(RawData) == 0) {
-		this->STATE_DATA.ID1RPM = Byte2Int(RawData[5], RawData[6]);
-		this->STATE_DATA.ID1AMP = Byte2Int(RawData[7], RawData[8]);
-		this->STATE_DATA.ID1STATE = RawData[9];
-		this->STATE_DATA.ID1POS = Byte2Long(RawData[10], RawData[11], RawData[12], RawData[13]);
-		this->STATE_DATA.ID1RPM = Byte2Int(RawData[14], RawData[15]);
-		this->STATE_DATA.ID1AMP = Byte2Int(RawData[16], RawData[17]);
-		this->STATE_DATA.ID1STATE = RawData[18];
-		this->STATE_DATA.ID1POS = Byte2Long(RawData[19], RawData[20], RawData[21], RawData[22]);
-	}
-	else {
-		//fflush
-		return false;
-	}
+	return false;
 }
 
 BYTE MD750T::CalcChecksum(const PACKET& pkt)
@@ -73,11 +60,11 @@ PACKET MD750T::StructPacket(BYTE pid, const DATA& data)
 	return Packet;
 }
 
-MD750T::MD750T(const char* fd, BYTE id)
+MD750T::MD750T(Uart* _uart, BYTE id)
 {
 	if (id > 0 || id < 254) this->DEVICE_ID = id;
 	else std::cout << "Constructor : Invalid DEVICE_ID" << std::endl;
-	//UART Uart(fd);
+	this->uart = _uart;
 }
 
 bool MD750T::Send_Signal(PID pid, const DATA& data) {
@@ -153,4 +140,3 @@ bool MD750T::MOV_BY_POS_ABS(long id1pos, int id1spd, long id2pos, int id2spd)
 
 	return Send_Signal(PID::PNT_POSI_VEL_CMD, data);
 }
-
