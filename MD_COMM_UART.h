@@ -1,8 +1,8 @@
-#ifndef _MD_COMM_UART
-#define _MD_COMM_UART
+#ifndef MD_COMM_UART
+#define MD_COMM_UART
 #include<vector>
 #include<iostream>
-
+#include"UART.h"
 //define constant IDs
 #define ENABLE                        1  
 #define RETURN_PNT_MAIN_DATA          2   
@@ -101,9 +101,9 @@ struct STATE {
 
 class MD750T {
 private:
+	Uart*     uart;
 	BYTE      DEVICE_ID = BROADCAST_ID;
 	STATE     DEVICE_STATE = { 0 };
-	//UART Uart(POS);
 	bool      TxPacket(const PACKET&);
 	bool      RxPacket(void);
 	BYTE      CalcChecksum(const PACKET&);
@@ -112,7 +112,7 @@ private:
 public:
 
 	//lowlevel control
-	MD750T(const char*, BYTE);
+	MD750T(Uart*, BYTE);
 	bool Send_Signal(PID pid, const DATA&);
 	bool Send_Signal(PID pid, BYTE);
 	bool Send_Signal(PID pid, BYTE, BYTE);
@@ -123,4 +123,4 @@ public:
 	bool MOV_BY_POS_ABS(long, int, long, int);
 };
 
-#endif _MD_COMM_UART
+#endif
