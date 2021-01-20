@@ -1,12 +1,22 @@
-#include "UART.h"
+#include "MD_COMM_UART.h"
 #include <iostream>
 using namespace std;
 
+#define RPM 3600
+
 int main(){
-	Uart JetsonNano("/dev/pts/4"); // please make UART data transfer loop using socat command
-	Uart Driver("/dev/pts/5"); // socat -d -d pty,raw,echo=0 pty,raw,echo=0
-	unsigned char Bytes[BUFFERSIZE] = {172,184,183,137,2,170,4,0}; //MDROBOT PROTOCOL - PID 137 SET BAUDRATE 
-	JetsonNano.sendUart(Bytes, 8);
-	Driver.readUart();
+	Uart jetson("/dev/pts/5");
+	
+	MD750T TRACK(&jetson, 1);
+	MD750T ARM(&jetson, 2);
+
+	//MOV_BY_POS
+	TRACK.MOV_BY_POS(100, 100); //go forward
+	TRACK.MOV_BY_POS(-200, -200); //go backward
+	TRACK.MOV_BY_POS(-1500, 1500); // turn
+
+	//MOV_BY_POS_ABS is absolute position control.
+	ARM.MOV_BY_POS_ABS(100, RPM, 100, RPM); //park arm at +100 (pulse)
+	ARM.MOV_BY_POS_ABS(-200, RPM, -200, RPM); //park arm at -200 (pulse)
 	return 0;
 }
