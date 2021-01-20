@@ -9,7 +9,7 @@ using namespace std;
 
 Uart::Uart(const char * Pt) {
 	uart_target = Pt;
-	
+	printf("UART.cpp : Opening Port %s please wait...\n",Pt);
 	struct termios  Port_options;   
 
 	tcgetattr(Port, &Port_options);	
@@ -19,11 +19,13 @@ Uart::Uart(const char * Pt) {
 	tcflush(Port, TCIFLUSH);
 	tcflush(Port, TCIOFLUSH);
 
-	usleep(500000);  // 1 sec delay
+	usleep(500000);
 
 	if (Port == -1)
 	{
-		printf("Alert from UART.cpp : Unable to open port.");
+		printf("UART.cpp : Unable to open port.");
+	}else{
+		printf("UART.cpp : Port opened. Setting Port options...");
 	}
 
 	//8 data bits, 1 stop bit, no parity, 57600bps, from MDRobot Communication specification
@@ -44,8 +46,8 @@ Uart::Uart(const char * Pt) {
 	
     int attributes = tcsetattr(Port, TCSANOW, &Port_options); //Save Attributes
 
-	if (attributes != 0) printf("\nAlert from UART.cpp : attribute failed.\n");
-	else printf("\nAlert from UART.cpp : Initializing Port Complete : %s\n",Pt);
+	if (attributes != 0) printf("\nUART.cpp : attribute failed.\n");
+	else printf("\nUART.cpp : Initializing Port Complete : %s\n",Pt);
 
 	tcflush(Port, TCIFLUSH);
 	tcflush(Port, TCIOFLUSH);
@@ -66,18 +68,14 @@ bool Uart::sendUart(const unsigned char* data, int size) {
         if (ret > 0) wrotelen += ret;
         else failcnt++;
     }
-	
-	for(int i = 0; i < size; i++)
-	printf("%d ",data[i]);
-	cout<<endl;
-    return true;
+    return (wrotelen == size)?true:false;
 }
 void Uart::readUart() {
 	unsigned char rx_buffer[BUFFERSIZE];
 	bool          onread = true;
 	int           packet_length;
 
-	usleep(1000);   // .001 sec delay
+	usleep(1000);
 	
 	packet_length = read(Port, rx_buffer, BUFFERSIZE);
 
