@@ -30,8 +30,13 @@ LBYTE Long2Byte(long lIn)
 
 bool MD750T::TxPacket(const PACKET& pct) //incomplete
 {	
-	uart->sendUart(pct.data() ,pct.size());
-	return false;
+	bool send_ok = uart->sendUart(pct.data() ,pct.size());
+	if(send_ok){
+		printf("Packet Sent. (ID : %d, PID : %d)\n",pct[2],pct[3]);
+	}else{
+		printf("Failed to send packet.\n");
+	}
+	return send_ok;
 }
 
 bool MD750T::RxPacket(void) //incomplete
@@ -62,8 +67,12 @@ PACKET MD750T::StructPacket(BYTE pid, const DATA& data)
 
 MD750T::MD750T(Uart* _uart, BYTE id)
 {
-	if (id > 0 || id < 254) this->DEVICE_ID = id;
-	else std::cout << "Constructor : Invalid DEVICE_ID" << std::endl;
+	if (id > 0 || id < 254) {
+		this->DEVICE_ID = id;
+		printf("MD_COMM.cpp : Device id %d constructed.\n",this->DEVICE_ID);
+	}else{
+		printf("MD_COMM.cpp : Failed to construct MD750T, Wrong device id.\n");
+	}
 	this->uart = _uart;
 }
 
