@@ -23,7 +23,7 @@ Uart::Uart(const char * Pt) {
 
 	if (Port == -1)
 	{
-		printf("Unable to open port.");
+		printf("Alert from UART.cpp : Unable to open port.");
 	}
 
 	//8 data bits, 1 stop bit, no parity, 57600bps, from MDRobot Communication specification
@@ -44,8 +44,8 @@ Uart::Uart(const char * Pt) {
 	
     int attributes = tcsetattr(Port, TCSANOW, &Port_options); //Save Attributes
 
-	if (attributes != 0) printf("\nERROR");
-	else printf("\n Initializing Port Complete : %s\n",Pt);
+	if (attributes != 0) printf("\nAlert from UART.cpp : attribute failed.\n");
+	else printf("\nAlert from UART.cpp : Initializing Port Complete : %s\n",Pt);
 
 	tcflush(Port, TCIFLUSH);
 	tcflush(Port, TCIOFLUSH);
@@ -54,24 +54,23 @@ Uart::Uart(const char * Pt) {
 }
 
 bool Uart::sendUart(const unsigned char* data, int size) {
-    int wrotelen = 0;
-    int failcnt = 0;
- 
-    if(!data || size <= 0) return 0;
-
+	int wrotelen = 0;
+	int failcnt = 0;
     while(wrotelen < size && failcnt < 10)
     {  
         int ret = 0;
         int towritelen = size - wrotelen;
         unsigned char *ptr = const_cast<unsigned char*>(data) + wrotelen;
-
         ret = write(Port,ptr,towritelen*sizeof(unsigned char));
 
         if (ret > 0) wrotelen += ret;
         else failcnt++;
     }
-
-    return wrotelen;
+	
+	for(int i = 0; i < size; i++)
+	printf("%d ",data[i]);
+	cout<<endl;
+    return true;
 }
 void Uart::readUart() {
 	unsigned char rx_buffer[BUFFERSIZE];
