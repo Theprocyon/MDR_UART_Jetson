@@ -1,7 +1,7 @@
 #ifndef _UART_H
 #define _UART_H
 #define NSERIAL   256
-#define BAUDRATE       B9600
+#define BAUDRATE       B19200
 #define BUFFERSIZE     50
 #define DEBUG_MODE 0
 
