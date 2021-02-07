@@ -2,7 +2,7 @@
 #include <iostream>
 using namespace std;
 
-#define RPM 3600
+#define RPM 3600 //maxrpm when call pid 216 positioncontrol
 
 int main(){
 	Uart jetson("/dev/pts/5");
