@@ -7,7 +7,7 @@
 #define ENABLE                        1  
 #define RETURN_PNT_MAIN_DATA          2   
 #define MAX_PACKET_SIZE               30
-#define MOTOR_CONTROLLER_MACHINE_ID   184
+#define MOTOR_CONTROLLER_MACHINE_ID   183
 #define USER_MACHINE_ID               172
 #define BROADCAST_ID                  254
 #define DEFAULT_WRITE_CHK		      0x55
